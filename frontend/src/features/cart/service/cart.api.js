@@ -39,7 +39,7 @@ export const createCartOrder = async () => {
 }
 
 export const verifyCartOrder = async ({razorpay_order_id, razorpay_payment_id, razorpay_signature}) => {
-    const response = await cartApiInstance.post("/payemnt/verify/order",{
+    const response = await cartApiInstance.post("/payment/verify/order",{
         razorpay_order_id, razorpay_payment_id, razorpay_signature
     })
     return response.data

@@ -32,13 +32,29 @@ export const useCart = () => {
     }
 
     async function handleCreateCartOrder(){
-        const data = await createCartOrder()
-        return data.order
+        try {
+            const data = await createCartOrder()
+            if (!data || !data.order) {
+                throw new Error("Invalid order response from server");
+            }
+            return data.order
+        } catch (error) {
+            console.error("Create order error:", error);
+            throw error;
+        }
     }
 
     async function handleVerifyCartOrder({razorpay_order_id, razorpay_payment_id, razorpay_signature}){
-        const data = await verifyCartOrder({razorpay_order_id, razorpay_payment_id, razorpay_signature})
-        return data.success
+        try {
+            const data = await verifyCartOrder({razorpay_order_id, razorpay_payment_id, razorpay_signature})
+            if (!data) {
+                throw new Error("Invalid verification response from server");
+            }
+            return data.success
+        } catch (error) {
+            console.error("Verify order error:", error);
+            throw error;
+        }
     }
 
     return { handleAddItem, handleGetCart, handleIncrementCartItem, handleDecrementCartItem, handleRemoveCartItem, handleCreateCartOrder, handleVerifyCartOrder }

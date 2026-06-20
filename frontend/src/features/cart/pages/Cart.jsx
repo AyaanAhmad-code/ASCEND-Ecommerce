@@ -58,35 +58,67 @@ const Cart = () => {
     `${currency} ${Number(amount).toLocaleString("en-IN")}`;
 
   async function handleCheckOut() {
-    const order = await handleCreateCartOrder();
-    console.log(order);
+    try {
+      const orderResponse = await handleCreateCartOrder();
 
-    const options = {
-      key: "rzp_test_ShNSkpxt3emQVJ",
-      amount: order.amount, // Amount in paise
-      currency: order.currency,
-      name: "Snitch",
-      description: "Test Transaction",
-      order_id: order.id, // Generate order_id on server
-      handler: async (response) => {
-        const isValid = await handleVerifyCartOrder(response)
+      if (!orderResponse) {
+        throw new Error("Failed to create order");
+      }
 
-        if(isValid){
-            navigate(`/order-success?order_id=${response?.razorpay_order_id}`)
-        }
-      },
-      prefill: {
-        name: user?.fullname,
-        email: user?.email,
-        contact: user?.contact,
-      },
-      theme: {
-        color: "#F37254",
-      },
-    };
+      const options = {
+        key: "rzp_test_T3rSVAtx0XbvCQ",
+        amount: orderResponse.amount,
+        currency: orderResponse.currency,
+        name: "Snitch",
+        description: "Test Transaction",
+        order_id: orderResponse.id,
+        handler: async (response) => {
+          try {
+            console.log("Payment response received:", response);
+            const isValid = await handleVerifyCartOrder({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
 
-    const razorpayInstance = new Razorpay(options);
-    razorpayInstance.open();
+            if (isValid) {
+              console.log("Payment verified successfully");
+              navigate(`/order-success?order_id=${response?.razorpay_order_id}`);
+            } else {
+              console.error("Payment verification failed");
+              alert("Payment verification failed. Please contact support.");
+            }
+          } catch (error) {
+            console.error("Verification error:", error);
+            alert("Payment verification error: " + error.message);
+          }
+        },
+        error: (error) => {
+          console.error("Razorpay error:", error);
+          alert("Payment error: " + error.description);
+        },
+        prefill: {
+          name: user?.fullname || "",
+          email: user?.email || "",
+          contact: user?.contact || "",
+        },
+        theme: {
+          color: "#F37254",
+        },
+      };
+
+      const razorpayInstance = new Razorpay(options);
+      try {
+        razorpayInstance.open();
+        console.log("Razorpay modal opened");
+      } catch (error) {
+        console.error("Failed to open Razorpay modal:", error);
+        alert("Failed to open payment modal: " + error.message);
+      }
+    } catch (error) {
+      console.error("Checkout error:", error);
+      alert("Checkout error: " + error.message);
+    }
   }
 
   /* ─── Empty state ─── */
@@ -204,10 +236,11 @@ const Cart = () => {
                   const attributes = variantDetail?.attributes ?? {};
                   const stock = variantDetail?.stock;
                   const variantPrice = variantDetail?.price;
+                  const itemKey = `${_id}-${variantId}`;
 
                   return (
                     <div
-                      key={_id}
+                      key={itemKey}
                       className="flex gap-6 md:gap-8 p-6 md:p-8 transition-all duration-300"
                       style={{ backgroundColor: tokens.surfaceLow }}
                     >
