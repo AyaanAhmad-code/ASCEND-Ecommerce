@@ -13,6 +13,6 @@ authRouter.post("/logout", authenticateUser, logout)
 authRouter.get("/me", authenticateUser, getMe)
 authRouter.put("/address", authenticateUser, updateAddress)
 authRouter.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }))
-authRouter.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: config.NODE_ENV === "development" ? "http://localhost:5173/login" : "/login" }), googleAuthCallback) 
+authRouter.get("/google/callback", passport.authenticate("google", { session: false, failureRedirect: "/login" }), googleAuthCallback) 
 
 export default authRouter
