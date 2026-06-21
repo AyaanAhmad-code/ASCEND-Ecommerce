@@ -13,6 +13,9 @@ import cors from "cors";
 
 const app = express();
 
+// Enable trust proxy so Passport.js knows it's behind HTTPS on Render
+app.set('trust proxy', 1);
+
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
