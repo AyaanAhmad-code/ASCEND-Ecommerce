@@ -1,32 +1,45 @@
-import { Resend } from 'resend';
-
 const sendEmail = async (options) => {
-    // If we have a Resend API Key, use Resend (Bypasses Render's port blocks)
-    if (process.env.RESEND_API_KEY) {
-        const resend = new Resend(process.env.RESEND_API_KEY);
+    // If we have a Brevo API Key, use Brevo's HTTP API (Bypasses Render's port blocks)
+    if (process.env.BREVO_API_KEY) {
+        console.log(`[Email Service] Sending email via Brevo API to: ${options.email}`);
         
-        console.log(`[Email Service] Sending email via Resend API to: ${options.email}`);
-        
-        const { data, error } = await resend.emails.send({
-            // Free Resend accounts can only send FROM onboarding@resend.dev
-            from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
-            to: options.email,
-            subject: options.subject,
-            html: options.html,
-        });
+        try {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': process.env.BREVO_API_KEY,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { 
+                        name: process.env.FROM_NAME || 'ASCEND E-Commerce', 
+                        email: process.env.FROM_EMAIL || 'ayaanopyt06@gmail.com' 
+                    },
+                    to: [{ email: options.email }],
+                    subject: options.subject,
+                    htmlContent: options.html
+                })
+            });
 
-        if (error) {
-            console.error("[Email Service] Resend Error:", error);
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.error("[Email Service] Brevo Error Response:", data);
+                throw new Error(data.message || "Failed to send email via Brevo");
+            }
+            
+            console.log("[Email Service] Brevo Success! Message ID:", data.messageId);
+            return data;
+        } catch (error) {
+            console.error("[Email Service] Brevo Fetch Error:", error);
             throw new Error(error.message);
         }
-        
-        console.log("[Email Service] Resend Success:", data);
-        return data;
     } 
     
-    // Fallback: If no Resend key, we assume local dev without email
+    // Fallback: If no Brevo key, we assume local dev without email
     console.log("----------------------------------------");
-    console.log("📧 Ethereal Test Email Mode (No Resend Key Found)");
+    console.log("📧 Ethereal Test Email Mode (No Brevo Key Found)");
     console.log(`To: ${options.email}`);
     console.log(`Subject: ${options.subject}`);
     console.log("----------------------------------------");
