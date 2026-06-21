@@ -211,7 +211,8 @@ export const googleAuthCallback = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
-    res.redirect("http://localhost:5173/")
+    const redirectUrl = config.NODE_ENV === "development" ? "http://localhost:5173/" : "/";
+    res.redirect(redirectUrl);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
