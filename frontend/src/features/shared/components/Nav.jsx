@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate, Link, useLocation } from 'react-router'
+import { useAuth } from '../../../features/auth/hook/useAuth'
 
 const Nav = () => {
     const navigate = useNavigate()
@@ -10,6 +11,7 @@ const Nav = () => {
     const [showUserMenu, setShowUserMenu] = useState(false)
     const menuRef = useRef(null)
     const location = useLocation()
+    const { handleLogout } = useAuth()
 
     const userMenuItems = [
         { label: 'Edit profile', path: '/profile' },
@@ -20,6 +22,12 @@ const Nav = () => {
     const handleUserAction = (path) => {
         setShowUserMenu(false)
         navigate(path)
+    }
+
+    const handleLogoutClick = async () => {
+        setShowUserMenu(false)
+        await handleLogout()
+        navigate('/')
     }
 
     useEffect(() => {
@@ -73,7 +81,7 @@ const Nav = () => {
                 className="text-sm font-medium tracking-[0.35em] uppercase hover:opacity-80 transition-opacity"
                 style={{ fontFamily: "'Cormorant Garamond', serif", color: '#C9A96E' }}
             >
-                Snitch.
+                ASCEND.
             </Link>
             
             <div className="hidden md:flex flex-1 max-w-md mx-8 items-center border-b px-2 py-1" style={{ borderColor: '#e4e2df' }}>
@@ -122,6 +130,15 @@ const Nav = () => {
                                             {item.label}
                                         </button>
                                     ))}
+                                    <div style={{ borderTop: '1px solid #e4e2df' }} />
+                                    <button
+                                        type="button"
+                                        onClick={handleLogoutClick}
+                                        className="w-full px-4 py-3 text-left text-[10px] uppercase tracking-[0.18em] transition hover:bg-[#f5f3f0]"
+                                        style={{ color: '#C9A96E' }}
+                                    >
+                                        Logout
+                                    </button>
                                 </div>
                             )}
                         </div>

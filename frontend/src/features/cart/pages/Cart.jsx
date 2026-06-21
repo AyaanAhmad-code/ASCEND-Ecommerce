@@ -127,7 +127,7 @@ const Cart = () => {
         key: razorpayKey,
         amount: order.amount,
         currency: order.currency,
-        name: "Snitch",
+        name: "ASCEND",
         description: "Test Transaction",
         order_id: order.id,
         handler: async (response) => {

@@ -30,3 +30,8 @@ export async function updateAddress(address) {
     const response = await authApiInstance.put("/address", address);
     return response.data;
 }
+
+export async function logout() {
+    const response = await authApiInstance.post("/logout");
+    return response.data;
+}

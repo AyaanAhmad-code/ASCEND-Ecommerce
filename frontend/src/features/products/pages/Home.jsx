@@ -109,13 +109,63 @@ const Home = () => {
                 </div>
 
                 {/* ── Footer ── */}
-                <footer className="border-t py-12 text-center" style={{ borderColor: '#e4e2df' }}>
-                    <span
-                        className="text-[10px] uppercase tracking-[0.35em]"
-                        style={{ fontFamily: "'Cormorant Garamond', serif", color: '#C9A96E' }}
-                    >
-                        Snitch. © {new Date().getFullYear()}
-                    </span>
+                <footer className="border-t" style={{ borderColor: '#e4e2df', backgroundColor: '#fefdfb' }}>
+                    <div className="max-w-7xl mx-auto px-8 lg:px-16 xl:px-24 py-16">
+                        {/* Main Footer Grid */}
+                        <div className="mb-12">
+                            {/* Company */}
+                            <div>
+                                <h3
+                                    className="text-xs uppercase tracking-[0.2em] font-medium mb-6"
+                                    style={{ color: '#C9A96E' }}
+                                >
+                                    Company
+                                </h3>
+                                <ul className="flex flex-wrap gap-6">
+                                    {['About Us', 'Privacy', 'Terms', 'Returns', 'Contact', 'Sitemap'].map((link) => (
+                                        <li key={link}>
+                                            <a href="#" className="text-sm" style={{ color: '#7A6E63' }}>
+                                                {link}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Footer Divider */}
+                        <div style={{ borderTop: '1px solid #e4e2df', paddingTop: '24px' }}>
+                            {/* Brand Statement */}
+                            <div className="mb-8">
+                                <h4
+                                    className="text-sm font-medium mb-3"
+                                    style={{ color: '#1b1c1a', fontFamily: "'Cormorant Garamond', serif" }}
+                                >
+                                    The ASCEND Experience
+                                </h4>
+                                <p className="text-xs leading-relaxed max-w-2xl" style={{ color: '#7A6E63' }}>
+                                    We blend digital convenience with modern retail. Shop anytime online through our curated collection, or visit a store to feel premium fabrics and find the perfect fit. Seamless omnichannel shopping—order online and pickup in-store, or enjoy doorstep delivery. Whether casual or formal, ASCEND crafts pieces for every season and occasion.
+                                </p>
+                            </div>
+
+                            {/* Bottom Links & Copyright */}
+                            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                <span
+                                    className="text-[10px] uppercase tracking-[0.35em]"
+                                    style={{ fontFamily: "'Cormorant Garamond', serif", color: '#C9A96E' }}
+                                >
+                                    ASCEND. © {new Date().getFullYear()}
+                                </span>
+                                <div className="flex gap-6">
+                                    {['Facebook', 'Instagram', 'LinkedIn', 'Google'].map((social) => (
+                                        <a key={social} href="#" className="text-xs" style={{ color: '#C9A96E' }}>
+                                            {social}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </footer>
             </div>
         </>

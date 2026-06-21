@@ -42,7 +42,7 @@ const Dashboard = () => {
                             className="text-xs font-medium tracking-[0.32em] uppercase"
                             style={{ fontFamily: "'Cormorant Garamond', serif", color: '#C9A96E' }}
                         >
-                            Snitch.
+                            ASCEND.
                         </span>
                     </div>
 
