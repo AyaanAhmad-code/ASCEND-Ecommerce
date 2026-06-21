@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx nodemon server.js"
+    "start": "node server.js",
+    "dev": "npx nodemon server.js",
+    "seed": "node src/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +15,8 @@
   "description": "",
   "dependencies": {
     "@imagekit/nodejs": "^7.5.0",
+    "amazon-buddy": "^2.2.45",
+    "axios": "^1.18.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

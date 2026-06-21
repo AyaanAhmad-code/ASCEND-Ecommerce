@@ -326,9 +326,27 @@ export const verifyPaymentController = async (req, res) => {
     payment.status = "paid";
     payment.razorpay.paymentId = razorpay_payment_id;
     payment.razorpay.signature = razorpay_signature;
-    
+
     await payment.save();
 
+    // Decrement stock for each ordered variant
+    const stockUpdates = payment.orderItems.map((item) => ({
+      updateOne: {
+        filter: {
+          _id: item.productId,
+          "variants._id": item.variantId,
+        },
+        update: {
+          $inc: { "variants.$.stock": -item.quantity },
+        },
+      },
+    }));
+
+    if (stockUpdates.length > 0) {
+      await productModel.bulkWrite(stockUpdates);
+    }
+
+    // Clear the cart
     await cartModel.findOneAndUpdate(
       { user: req.user._id },
       { items: [] },

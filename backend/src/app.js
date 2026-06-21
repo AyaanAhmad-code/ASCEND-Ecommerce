@@ -1,4 +1,6 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import authRouter from "./routes/auth.routes.js";
@@ -30,12 +32,25 @@ passport.use(new GoogleStrategy({
     return done(null, profile);
 }));
 
-app.get("/", (_req, res) => {
+// API Healthcheck (optional, moved to /api/health)
+app.get("/api/health", (_req, res) => {
     res.status(200).json({ message: "Server is running" });
 });
 
 app.use("/api/auth", authRouter)
 app.use("/api/products", productRouter)
 app.use("/api/cart", cartRouter)
+
+// Resolve __dirname since we're using ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static frontend files from the "public" directory
+app.use(express.static(path.join(__dirname, "../public")));
+
+// Catch-all route to serve React's index.html for client-side routing
+app.use((req, res) => {
+    res.sendFile(path.resolve(__dirname, "../public", "index.html"));
+});
 
 export default app;
