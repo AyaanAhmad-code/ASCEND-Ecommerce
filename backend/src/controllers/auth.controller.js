@@ -258,11 +258,11 @@ export const forgotPassword = async (req, res) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // Create reset url
-    const protocol = config.NODE_ENV === "production" ? "https" : "http";
-    // For single domain deployed app, host is the same. For local, we use 5173.
-    const host = config.NODE_ENV === "production" ? req.get("host") : "localhost:5173";
-    const resetUrl = `${protocol}://${host}/reset-password/${resetToken}`;
+    // Create reset url dynamically based on request host
+    const reqHost = req.get("host");
+    const protocol = reqHost.includes("localhost") ? "http" : "https";
+    const clientHost = reqHost.includes("localhost") ? "localhost:5173" : reqHost;
+    const resetUrl = `${protocol}://${clientHost}/reset-password/${resetToken}`;
 
     const message = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd;">
