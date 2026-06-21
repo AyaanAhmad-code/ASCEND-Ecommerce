@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useCart } from "../hooks/useCart";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useRazorpay } from "react-razorpay";
 
 /* ─── Inline styles & tokens matching the "Avenue Montaigne" design system ─── */
@@ -29,18 +29,58 @@ const Cart = () => {
     handleDecrementCartItem,
     handleRemoveCartItem,
     handleCreateCartOrder,
-    handleVerifyCartOrder
+    handleVerifyCartOrder,
   } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const { error, isLoading, Razorpay } = useRazorpay();
-  const user = useSelector(state=>state.user)
+  const user = useSelector((state) => state.auth.user);
+  const [checkoutStarted, setCheckoutStarted] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   /* Local quantity state — key: cartItem._id, value: number */
   const [quantities, setQuantities] = useState({});
 
+  const userName = user?.fullname || "Account";
+  const userMenuItems = [
+    { label: "Edit profile", path: "/profile" },
+    { label: "Edit address", path: "/checkout/address" },
+  ];
+
+  const toggleUserMenu = () => setShowUserMenu((prev) => !prev);
+  const handleUserAction = (path) => {
+    setShowUserMenu(false);
+    navigate(path);
+  };
+
+  const getStoredAddress = () => {
+    const address = user?.address;
+    if (!address) return null;
+
+    const requiredFields = ["fullName", "line1", "city", "state", "postalCode", "country"];
+    const hasValidAddress = requiredFields.every((field) => address[field]?.toString().trim());
+
+    return hasValidAddress ? address : null;
+  };
+
   useEffect(() => {
     handleGetCart();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (checkoutStarted) return;
+    if (params.get("checkout") === "payment") {
+      const storedAddress = getStoredAddress();
+      if (!storedAddress) {
+        navigate("/checkout/address");
+        return;
+      }
+      setCheckoutStarted(true);
+      navigate(location.pathname, { replace: true });
+      handleCheckOut();
+    }
+  }, [location.search, checkoutStarted, navigate, user]);
 
   /* ─── Helpers ─── */
   const getVariantDetails = (product, variantId) => {
@@ -59,19 +99,37 @@ const Cart = () => {
 
   async function handleCheckOut() {
     try {
-      const orderResponse = await handleCreateCartOrder();
+      const storedAddress = getStoredAddress();
+      if (!storedAddress) {
+        navigate("/checkout/address");
+        return;
+      }
 
-      if (!orderResponse) {
+      const response = await handleCreateCartOrder();
+      const order = response?.order;
+      const razorpayKey = response?.key;
+
+      if (!order || !razorpayKey) {
         throw new Error("Failed to create order");
       }
 
+      localStorage.setItem(
+        "checkout_payload",
+        JSON.stringify({
+          items: cart.items,
+          totalPrice: cart.totalPrice,
+          currency: cart.currency,
+          orderId: order.id,
+        }),
+      );
+
       const options = {
-        key: "rzp_test_T3rSVAtx0XbvCQ",
-        amount: orderResponse.amount,
-        currency: orderResponse.currency,
+        key: razorpayKey,
+        amount: order.amount,
+        currency: order.currency,
         name: "Snitch",
         description: "Test Transaction",
-        order_id: orderResponse.id,
+        order_id: order.id,
         handler: async (response) => {
           try {
             console.log("Payment response received:", response);
@@ -83,6 +141,7 @@ const Cart = () => {
 
             if (isValid) {
               console.log("Payment verified successfully");
+              await handleGetCart();
               navigate(`/order-success?order_id=${response?.razorpay_order_id}`);
             } else {
               console.error("Payment verification failed");
@@ -475,6 +534,39 @@ const Cart = () => {
                   boxShadow: "0 20px 40px rgba(27,28,26,0.04)",
                 }}
               >
+                <div className="relative mb-6 text-right">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-[#d0c5b5] bg-white px-4 py-2 text-[11px] uppercase tracking-[0.22em] font-medium transition hover:bg-[#f5f3f0]"
+                    onClick={toggleUserMenu}
+                    aria-expanded={showUserMenu}
+                  >
+                    {userName}
+                    <span style={{ transform: showUserMenu ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
+                      ▼
+                    </span>
+                  </button>
+
+                  {showUserMenu ? (
+                    <div
+                      className="absolute right-0 z-30 mt-2 w-52 rounded-xl border border-[#e2dcd4] bg-white shadow-lg"
+                      style={{ overflow: "hidden" }}
+                    >
+                      {userMenuItems.map((item) => (
+                        <button
+                          key={item.path}
+                          type="button"
+                          onClick={() => handleUserAction(item.path)}
+                          className="w-full px-4 py-3 text-left text-sm uppercase tracking-[0.18em] transition hover:bg-[#f5f3f0]"
+                          style={{ color: tokens.onSurface }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+
                 {/* Heading */}
                 <h2
                   className="font-light mb-6"
@@ -569,25 +661,27 @@ const Cart = () => {
                 </div>
 
                 {/* Primary CTA */}
-                <button
-                  id="proceed-checkout"
-                  className="w-full py-4 mb-3 text-[11px] uppercase tracking-[0.25em] font-medium transition-all duration-300"
-                  style={{
-                    backgroundColor: tokens.onSurface,
-                    color: tokens.surface,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = tokens.primary;
-                    e.currentTarget.style.color = tokens.onSurface;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = tokens.onSurface;
-                    e.currentTarget.style.color = tokens.surface;
-                  }}
-                  onClick={handleCheckOut}
-                >
-                  Proceed to Checkout
-                </button>
+                {cart.items && cart.items.length > 0 && (
+                  <button
+                    id="proceed-checkout"
+                    className="w-full py-4 mb-3 text-[11px] uppercase tracking-[0.25em] font-medium transition-all duration-300"
+                    style={{
+                      backgroundColor: tokens.onSurface,
+                      color: tokens.surface,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = tokens.primary;
+                      e.currentTarget.style.color = tokens.onSurface;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = tokens.onSurface;
+                      e.currentTarget.style.color = tokens.surface;
+                    }}
+                    onClick={handleCheckOut}
+                  >
+                    Proceed to Checkout
+                  </button>
+                )}
 
                 {/* Secondary ghost CTA */}
                 <button

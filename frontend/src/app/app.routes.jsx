@@ -8,8 +8,10 @@ import Home from "../features/products/pages/Home";
 import ProductDetail from "../features/products/pages/ProductDetail";
 import SellerProductDetail from "../features/products/pages/SellerProductDetail";
 import Cart from "../features/cart/pages/Cart";
+import CheckoutAddress from "../features/cart/pages/CheckoutAddress";
 import Applayouts from "./Applayouts";
 import OrderSuccess from "../features/cart/pages/OrderSuccess";
+import Profile from "../features/auth/pages/Profile";
 
 export const routes = createBrowserRouter([
   {
@@ -40,8 +42,24 @@ export const routes = createBrowserRouter([
         ),
       },
       {
+        path: "/checkout/address",
+        element: (
+          <Protected>
+            <CheckoutAddress />
+          </Protected>
+        ),
+      },
+      {
         path: "/order-success",
         element: <OrderSuccess />
+      },
+      {
+        path: "/profile",
+        element: (
+          <Protected>
+            <Profile />
+          </Protected>
+        ),
       },
       {
         path: "/seller",

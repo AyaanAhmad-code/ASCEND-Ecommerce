@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { useNavigate, Link, useLocation } from 'react-router'
 
@@ -7,7 +7,35 @@ const Nav = () => {
     const user = useSelector(state => state.auth.user)
     const cartItems = useSelector(state => state.cart?.items)
     const [searchTerm, setSearchTerm] = useState('')
+    const [showUserMenu, setShowUserMenu] = useState(false)
+    const menuRef = useRef(null)
     const location = useLocation()
+
+    const userMenuItems = [
+        { label: 'Edit profile', path: '/profile' },
+        { label: 'Edit address', path: '/checkout/address' },
+    ]
+
+    const toggleUserMenu = () => setShowUserMenu(prev => !prev)
+    const handleUserAction = (path) => {
+        setShowUserMenu(false)
+        navigate(path)
+    }
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setShowUserMenu(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    useEffect(() => {
+        setShowUserMenu(false)
+    }, [location.pathname])
 
     useEffect(() => {
         if (location.pathname !== '/') {
@@ -67,7 +95,36 @@ const Nav = () => {
             <div className="flex gap-6 items-center text-[10px] uppercase tracking-[0.2em] font-medium" style={{ color: '#7A6E63' }}>
                 {user ? (
                     <>
-                        <span style={{ color: '#1b1c1a' }}>{user.fullname}</span>
+                        <div className="relative" ref={menuRef}>
+                            <button
+                                type="button"
+                                className="flex items-center gap-2 rounded-full border border-[#d0c5b5] bg-white px-4 py-2 text-[10px] uppercase tracking-[0.2em] font-medium transition hover:bg-[#f5f3f0]"
+                                style={{ color: '#1b1c1a' }}
+                                onClick={toggleUserMenu}
+                                aria-expanded={showUserMenu}
+                            >
+                                {user.fullname}
+                                <span style={{ transform: showUserMenu ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+                                    ▼
+                                </span>
+                            </button>
+
+                            {showUserMenu && (
+                                <div className="absolute right-0 z-20 mt-2 w-44 overflow-hidden rounded-xl border border-[#e4e2df] bg-white shadow-xl">
+                                    {userMenuItems.map((item) => (
+                                        <button
+                                            key={item.path}
+                                            type="button"
+                                            onClick={() => handleUserAction(item.path)}
+                                            className="w-full px-4 py-3 text-left text-[10px] uppercase tracking-[0.18em] transition hover:bg-[#f5f3f0]"
+                                            style={{ color: '#1b1c1a' }}
+                                        >
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                         {user.role === 'seller' && (
                             <Link to="/seller/dashboard" className="transition-colors hover:text-[#C9A96E]">Seller Dashboard</Link>
                         )}

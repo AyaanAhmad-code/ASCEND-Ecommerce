@@ -26,7 +26,8 @@ async function sendTokenResponse(user, res, message) {
             email: user.email,
             contact: user.contact,
             fullname: user.fullname,
-            role: user.role
+            role: user.role,
+            address: user.address || null
         }
     })
 
@@ -101,11 +102,77 @@ export const getMe = async (req, res) => {
                 email: user.email,
                 contact: user.contact,
                 fullname: user.fullname,
-                role: user.role
+                role: user.role,
+                address: user.address || null
             }
         });
 
     } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+export const updateAddress = async (req, res) => {
+    try {
+        const {
+            fullName,
+            email,
+            contact,
+            line1,
+            line2,
+            city,
+            state,
+            postalCode,
+            country,
+        } = req.body;
+
+        if (!fullName || !line1 || !city || !state || !postalCode || !country) {
+            return res.status(400).json({
+                message: "Please provide all required address fields",
+                success: false,
+            });
+        }
+
+        const user = await userModel.findByIdAndUpdate(
+            req.user._id,
+            {
+                contact,
+                address: {
+                    fullName,
+                    email,
+                    contact,
+                    line1,
+                    line2,
+                    city,
+                    state,
+                    postalCode,
+                    country,
+                },
+            },
+            { new: true },
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+                success: false,
+            });
+        }
+
+        res.status(200).json({
+            message: "Address updated successfully",
+            success: true,
+            user: {
+                id: user._id,
+                email: user.email,
+                contact: user.contact,
+                fullname: user.fullname,
+                role: user.role,
+                address: user.address || null,
+            },
+        });
+    } catch (error) {
+        console.error("Update address error:", error);
         res.status(500).json({ message: "Server error" });
     }
 }

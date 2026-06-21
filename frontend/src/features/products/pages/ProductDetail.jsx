@@ -342,6 +342,21 @@ const ProductDetail = () => {
                                     onMouseLeave={e => {
                                         e.currentTarget.style.borderColor = '#d0c5b5';
                                     }}
+                                    onClick={async () => {
+                                        if(!user){
+                                            return navigate("/login");
+                                        }
+                                        try {
+                                            await handleAddItem({
+                                                productId: product._id,
+                                                variantId: activeVariant._id
+                                            });
+                                            navigate('/checkout/address');
+                                        } catch (error) {
+                                            console.error("Failed to add to cart");
+                                            toast.error("Failed to add item to cart");
+                                        }
+                                    }}
                                 >
                                     Buy Now
                                 </button>

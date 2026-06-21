@@ -259,7 +259,7 @@ export const createOrderController = async (req, res) => {
       },
       price: {
         amount: cart.totalPrice,
-        currency: cart.currency
+        currency: cart.currency,
       },
       orderItems: cart.items.map(item => ({
         title: item.product.title,
@@ -270,7 +270,7 @@ export const createOrderController = async (req, res) => {
         description: item.product.description,
         price: {
           amount: item.product.variants.price.amount || item.product.price.amount,
-          currency: item.product.variants.price.currency || item.product.price.currency
+          currency: item.product.variants.price.currency || item.product.price.currency,
         }
       }))
     });
@@ -279,6 +279,7 @@ export const createOrderController = async (req, res) => {
       message: "Order created successfully",
       success: true,
       order,
+      key: config.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     console.error("Error creating order:", error);
@@ -327,6 +328,12 @@ export const verifyPaymentController = async (req, res) => {
     payment.razorpay.signature = razorpay_signature;
     
     await payment.save();
+
+    await cartModel.findOneAndUpdate(
+      { user: req.user._id },
+      { items: [] },
+      { new: true },
+    );
 
     return res.status(200).json({
       message: "Payment verified successfully",

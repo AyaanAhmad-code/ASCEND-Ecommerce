@@ -37,7 +37,7 @@ export const useCart = () => {
             if (!data || !data.order) {
                 throw new Error("Invalid order response from server");
             }
-            return data.order
+            return data
         } catch (error) {
             console.error("Create order error:", error);
             throw error;

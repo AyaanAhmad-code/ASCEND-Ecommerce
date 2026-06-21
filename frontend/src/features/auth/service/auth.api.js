@@ -25,3 +25,8 @@ export async function getMe() {
     const response = await authApiInstance.get("/me");
     return response.data;
 }
+
+export async function updateAddress(address) {
+    const response = await authApiInstance.put("/address", address);
+    return response.data;
+}

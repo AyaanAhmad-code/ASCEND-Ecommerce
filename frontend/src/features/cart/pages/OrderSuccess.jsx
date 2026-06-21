@@ -1,5 +1,6 @@
 import React from 'react'
 import { useLocation, Link } from 'react-router'
+import { useSelector } from 'react-redux'
 
 const tokens = {
     surface: '#fbf9f6',
@@ -20,8 +21,34 @@ const tokens = {
 const OrderSuccess = () => {
     const location = useLocation()
 
-    const queryParams = new URLSearchParams(location.search)
-    const orderId = queryParams.get("order_id") || "SN-00000"
+    const queryParams = new URLSearchParams(location.search);
+    const orderId = queryParams.get("order_id") || "SN-00000";
+
+    const checkoutPayload = (() => {
+      const payload = localStorage.getItem("checkout_payload");
+      if (!payload) return null;
+      try {
+        return JSON.parse(payload);
+      } catch {
+        return null;
+      }
+    })();
+
+    const user = useSelector((state) => state.auth.user);
+    const storedAddress = user?.address || null;
+    const items = checkoutPayload?.items || [];
+    const totalPrice = checkoutPayload?.totalPrice;
+    const currency = checkoutPayload?.currency || "INR";
+    const formattedTotal = totalPrice
+      ? `${currency} ${Number(totalPrice).toLocaleString("en-IN")}`
+      : "N/A";
+
+    const shippingAddress = storedAddress
+      ? `${storedAddress.fullName}
+${storedAddress.line1}${storedAddress.line2 ? `, ${storedAddress.line2}` : ""}
+${storedAddress.city}, ${storedAddress.state} - ${storedAddress.postalCode}
+${storedAddress.country}`
+      : "No shipping address available";
 
     return (
         <>
@@ -79,60 +106,78 @@ const OrderSuccess = () => {
                                     Order Summary
                                 </h3>
                                 
-                                <div className="flex gap-6 items-center">
-                                    <div 
-                                        className="w-24 h-32 flex-shrink-0 overflow-hidden"
-                                        style={{ backgroundColor: tokens.surfaceHigh }}
+                                {items.length ? (
+                                  <div className="space-y-6">
+                                    {items.map((item, index) => {
+                                      const product = item.product || {};
+                                      const variant = item.variant || {};
+                                      return (
+                                        <div key={`${product._id}-${variant._id || index}`} className="flex gap-6 items-center">
+                                          <div
+                                            className="w-24 h-32 flex-shrink-0 overflow-hidden"
+                                            style={{ backgroundColor: tokens.surfaceHigh }}
+                                          >
+                                            {product.images?.[0]?.url ? (
+                                              <img
+                                                className="w-full h-full object-cover grayscale-[20%]"
+                                                alt={product.title || "Product image"}
+                                                src={product.images[0].url}
+                                              />
+                                            ) : null}
+                                          </div>
+                                          <div className="flex-grow space-y-1">
+                                            <h4
+                                              className="text-lg"
+                                              style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                                            >
+                                              {product.title || "Product"}
+                                            </h4>
+                                            <p
+                                              className="text-sm uppercase tracking-tighter"
+                                              style={{ color: tokens.outline }}
+                                            >
+                                              {variant.attributes
+                                                ? Object.values(variant.attributes).join(" / ")
+                                                : "Variant details"}
+                                            </p>
+                                            <p className="font-semibold mt-2">
+                                              {currency} {Number(item.price?.amount || variant?.price?.amount || product.price?.amount || 0).toLocaleString("en-IN")}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+
+                                    <div
+                                      className="space-y-4 pt-4"
+                                      style={{ borderTop: `1px solid ${tokens.outlineVariant}` }}
                                     >
-                                        <img 
-                                            className="w-full h-full object-cover grayscale-[20%]" 
-                                            alt="Close-up of a high-end luxury wool coat" 
-                                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2RecxLWsxoaJynjbfvLhuprDTMGsixBfioU4mbbHAwGqbpMf6F_huInjecTUxna_Zu_L7Gi4m-t0JDR9fsydoDl1zu3a-c0YusFQtRSFCdag1T6MBqd8acu7PunJfNXzTc5uK4eBNrw1lh0lgL_9CbR2AZs24nUxgGwKlUYjOEqEof9FSZrlOpzDmxlNMsvGmGAEPWFT42HixJtHAGEYo2R4TR2b-IV0kxjCslE4okGTbl-Ikc7WyUMQtSnfcurwHAc1qshFN3Ho"
-                                        />
-                                    </div>
-                                    <div className="flex-grow space-y-1">
-                                        <h4 
-                                            className="text-lg"
-                                            style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                                        >
-                                            Architectural Wool Overcoat
-                                        </h4>
-                                        <p 
-                                            className="text-sm uppercase tracking-tighter"
-                                            style={{ color: tokens.outline }}
-                                        >
-                                            Camel / Large
-                                        </p>
-                                        <p className="font-semibold mt-2">$1,450.00</p>
-                                    </div>
-                                </div>
-                                
-                                <div 
-                                    className="space-y-4 pt-4"
-                                    style={{ borderTop: `1px solid ${tokens.outlineVariant}` }}
-                                >
-                                    <div 
+                                      <div
                                         className="flex justify-between text-sm uppercase tracking-widest"
                                         style={{ color: tokens.secondary }}
-                                    >
+                                      >
                                         <span>Subtotal</span>
-                                        <span>$1,450.00</span>
-                                    </div>
-                                    <div 
+                                        <span>{formattedTotal}</span>
+                                      </div>
+                                      <div
                                         className="flex justify-between text-sm uppercase tracking-widest"
                                         style={{ color: tokens.secondary }}
-                                    >
+                                      >
                                         <span>Shipping</span>
                                         <span>Complimentary</span>
-                                    </div>
-                                    <div 
+                                      </div>
+                                      <div
                                         className="flex justify-between text-lg pt-2"
                                         style={{ fontFamily: "'Cormorant Garamond', serif" }}
-                                    >
+                                      >
                                         <span>Total</span>
-                                        <span style={{ color: tokens.primaryDark }}>$1,450.00</span>
+                                        <span style={{ color: tokens.primaryDark }}>{formattedTotal}</span>
+                                      </div>
                                     </div>
-                                </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-sm text-[#4d463a]">No order summary available.</div>
+                                )}
                             </section>
                         </div>
 
@@ -163,11 +208,9 @@ const OrderSuccess = () => {
                                     </h3>
                                     <p 
                                         className="leading-relaxed uppercase tracking-tighter text-sm"
-                                        style={{ color: tokens.onSurfaceVariant }}
+                                        style={{ color: tokens.onSurfaceVariant, whiteSpace: 'pre-line' }}
                                     >
-                                        Julianne V. Sterling<br/>
-                                        742 Avenue Montaigne, Apt 4B<br/>
-                                        Paris, France 75008
+                                        {shippingAddress}
                                     </p>
                                 </div>
                                 

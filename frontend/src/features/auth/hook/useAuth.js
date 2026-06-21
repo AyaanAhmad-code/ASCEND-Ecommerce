@@ -1,5 +1,5 @@
 import {setError, setLoading, setUser } from "../state/auth.slice.js";
-import { register, login, getMe } from "../service/auth.api.js";
+import { register, login, getMe, updateAddress } from "../service/auth.api.js";
 import { useDispatch } from "react-redux";
 
 export const useAuth = () => {
@@ -47,9 +47,25 @@ export const useAuth = () => {
         }
     }
 
+    async function handleUpdateAddress(address) {
+        try {
+            dispatch(setLoading(true));
+            dispatch(setError(null));
+            const data = await updateAddress(address);
+            dispatch(setUser(data.user));
+            return data.user;
+        } catch (error) {
+            dispatch(setError(error.message));
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
     return {
         handleRegister,
         handleLogin,
-        handleGetMe
+        handleGetMe,
+        handleUpdateAddress,
     }
 }
